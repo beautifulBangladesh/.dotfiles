@@ -1,23 +1,18 @@
 #!/bin/bash
 
-echo "Dotfiles init.sh running..."
+echo "▶ Dotfiles install script running..."
 
-# Extract Gitpod Workspace URL, without https:// and /
-GITPOD_HOST=$(echo $GITPOD_WORKSPACE_URL | sed 's|https://||' | sed 's|/.*||')
+# Add Gitpod hostname to vite.config.js (if it exists)
+if [ -f vite.config.js ]; then
+  echo "✔ Found vite.config.js"
+  GITPOD_HOST=$(echo "$GITPOD_WORKSPACE_URL" | sed 's|https://||' | sed 's|/||g')
 
-CONFIG_PATH="vite.config.js"
-
-if [ -f "$CONFIG_PATH" ]; then
-  echo "🔧 Injecting Gitpod host: $GITPOD_HOST into vite.config.js..."
-
-  # Check if the host is already in vite.config.js
-  if ! grep -q "$GITPOD_HOST" "$CONFIG_PATH"; then
-    # Inject the allowedHosts property
-    sed -i "/server: {/a \ \ \ \ allowedHosts: ['$GITPOD_HOST']," "$CONFIG_PATH"
-    echo "✅ Injection done!"
+  if ! grep -q "$GITPOD_HOST" vite.config.js; then
+    sed -i "/server: {/a \ \ \ \ host: true,\n\ \ \ \ hmr: { host: '$GITPOD_HOST' }," vite.config.js
+    echo "✅ vite.config.js updated for Gitpod HMR"
   else
-    echo "ℹ️ Host already exists in vite.config.js"
+    echo "ℹ️ vite.config.js already configured"
   fi
 else
-  echo "❌ vite.config.js not found"
+  echo "⚠️ vite.config.js not found"
 fi
